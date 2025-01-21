@@ -1,0 +1,23 @@
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>State</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @for (todo of todos$ | async; track todo.id) {
+            <tr>
+                <td>{{ todo.title }}</td>
+                <td>{{ todo.description }}</td>
+                <td>{{ todo.state }}</td>
+                <td><a [routerLink]="['/todo/edit', todo.id]">🖉</a></td>
+            </tr>
+        } @empty {
+        No Todos
+        }
+    </tbody>
+</table>

@@ -1,0 +1,23 @@
+<label>
+    Live policy checking:
+    <input type="checkbox" #livePolicyCheckbox (change)="livePolicy$.next(livePolicyCheckbox.checked)">    
+</label>
+
+
+<form [formGroup]="form" (submit)="submit()">
+    <label>Title</label>
+    <input formControlName="title" />
+
+    <label>Description</label>
+    <textarea formControlName="description"></textarea>
+
+    <label>State</label>
+    <select formControlName="state">
+        <option value="NEW">NEW</option>
+        <option value="IN_PROGRESS">IN_PROGRESS</option>
+        <option value="DONE">DONE</option>
+    </select>
+    <button type="submit">Submit</button>
+</form>
+
+{{this.form.getRawValue() | json}}

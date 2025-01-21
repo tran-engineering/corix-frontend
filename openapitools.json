@@ -1,0 +1,25 @@
+{
+    "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+    "spaces": 2,
+    "generator-cli": {
+        "version": "7.1.0",
+        "generators": {
+            "todo-api": {
+                "generatorName": "typescript-angular",
+                "output": "#{cwd}/src/gen/todo-api",
+                "glob": "openapi/todo-api.json",
+                "additionalProperties": {
+                    "supportsES6": "true"
+                }
+            },
+            "policy-api": {
+                "generatorName": "typescript-angular",
+                "output": "#{cwd}/src/gen/policy-api",
+                "glob": "openapi/policy-api.json",
+                "additionalProperties": {
+                    "supportsES6": "true"
+                }
+            }
+        }
+    }
+}

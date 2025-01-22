@@ -93,30 +93,16 @@ export class TodoControllerService {
 
     /**
      * Creates a new todo
-     * @param title 
-     * @param description 
+     * @param todo 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createTodo(title: string, description: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any>;
-    public createTodo(title: string, description: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<any>>;
-    public createTodo(title: string, description: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<any>>;
-    public createTodo(title: string, description: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
-        if (title === null || title === undefined) {
-            throw new Error('Required parameter title was null or undefined when calling createTodo.');
-        }
-        if (description === null || description === undefined) {
-            throw new Error('Required parameter description was null or undefined when calling createTodo.');
-        }
-
-        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
-        if (title !== undefined && title !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>title, 'title');
-        }
-        if (description !== undefined && description !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>description, 'description');
+    public createTodo(todo: Todo, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any>;
+    public createTodo(todo: Todo, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<any>>;
+    public createTodo(todo: Todo, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<any>>;
+    public createTodo(todo: Todo, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (todo === null || todo === undefined) {
+            throw new Error('Required parameter todo was null or undefined when calling createTodo.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -139,6 +125,15 @@ export class TodoControllerService {
         }
 
 
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
         let responseType_: 'text' | 'json' | 'blob' = 'json';
         if (localVarHttpHeaderAcceptSelected) {
             if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
@@ -154,7 +149,7 @@ export class TodoControllerService {
         return this.httpClient.request<any>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters,
+                body: todo,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { PolicyControllerService } from '../../gen/policy-api';
+import { eval as casbinEval, parse as casbinParse } from '@casbin/expression-eval';
 import { combineLatest, map, Observable, shareReplay } from 'rxjs';
+import { PolicyControllerService } from '../../gen/policy-api';
 
 @Injectable({
   providedIn: 'root'
@@ -25,39 +26,33 @@ export class PolicyService {
     );
   }
 
-  public editableFields<T>(entityType: string, entity$: Observable<T>): Observable<Record<string, boolean>> {
-    return combineLatest([
-      entity$,
-      this.getPolicy(entityType, "EditableIf")
-    ]).pipe(
-      map(([entity, policy]) => {
-        console.log(entity, policy);
-        const isEditable: Record<string, boolean> = {};
-        const variables = Object.entries(entity as any).map(([field, value]) => `let ${field} = '${value}';`);
-        for (const [field, expression] of Object.entries(policy)) {
-          isEditable[field] = new Function('entity', `${variables.join('\n')};return (${expression})`)();
-        }
-        console.log('violations', isEditable);
-        return isEditable;
+  public getPoliciesForType(entityType: string): Observable<Record<string, Record<string, string>>> {
+    return this.getPolicies().pipe(
+      map(policies => {
+        return policies[entityType];
       })
     );
   }
 
-  public visibleFields<T>(entityType: string, entity$: Observable<T>): Observable<Record<string, boolean>> {
+  public evaluatePolicies<T extends object>(entityType: string, entity$: Observable<T>): Observable<{ entity: T, policyResults: Record<string, Record<string, boolean>> }> {
     return combineLatest([
-      entity$,
-      this.getPolicy(entityType, "VisibleIf")
+      this.getPoliciesForType(entityType),
+      entity$
     ]).pipe(
-      map(([entity, policy]) => {
-        console.log(entity, policy);
-        const isVisible: Record<string, boolean> = {};
-        const variables = Object.entries(entity as any).map(([field, value]) => `let ${field} = '${value}';`);
-        for (const [field, expression] of Object.entries(policy)) {
-          isVisible[field] = new Function('entity', `${variables.join('\n')};return (${expression})`)();
-        }
-        console.log('violations', isVisible);
-        return isVisible;
-      })
+      map(([policiesByField, entity]) => {
+        const results = Object.entries(policiesByField).map(([field, policies]) => {
+          const policyResults = Object.fromEntries(Object.entries(policies).map(([policyName, expression]) => {
+            const result = casbinEval(casbinParse(expression), entity);
+            return [policyName, result];
+          }));
+          return [field, policyResults];
+        });
+        return {
+          entity,
+          policyResults: Object.fromEntries(results)
+        };
+      }),
     );
   }
+
 }

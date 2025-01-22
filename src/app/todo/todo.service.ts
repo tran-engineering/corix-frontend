@@ -5,6 +5,9 @@ import { Todo, TodoControllerService } from '../../gen/todo-api';
   providedIn: 'root'
 })
 export class TodoService {
+  public saveTodo(todo: Todo) {
+    return this.todoControllerService.createTodo(todo);
+  }
 
   constructor(private todoControllerService: TodoControllerService) { }
 
@@ -16,7 +19,7 @@ export class TodoService {
     return this.todoControllerService.getTodo(id);
   }
 
-  public saveTodo(todo: Todo) {
+  public updateTodo(todo: Todo) {
     return this.todoControllerService.updateTodo(todo);
   }
 }

@@ -10,14 +10,23 @@
     <tbody>
 
         @for (todo of todos$ | async; track todo.id) {
-            <tr>
-                <td>{{ todo.title }}</td>
-                <td>{{ todo.description }}</td>
-                <td>{{ todo.state }}</td>
-                <td><a [routerLink]="['/todo/edit', todo.id]">🖉</a></td>
-            </tr>
+        <tr>
+            <td>{{ todo.title }}</td>
+            <td>{{ todo.description }}</td>
+            <td>{{ todo.state }}</td>
+            <td><a [routerLink]="['/todo/edit', todo.id]">🖉</a></td>
+        </tr>
         } @empty {
-        No Todos
+        <tr>
+            <td colspan="99">
+                No Todos
+            </td>
+        </tr>
         }
+        <tr>
+            <td colspan="99">
+                <a [routerLink]="['/todo/new']">Add Todo</a>
+            </td>
+        </tr>
     </tbody>
 </table>

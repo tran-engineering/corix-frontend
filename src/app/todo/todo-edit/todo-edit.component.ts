@@ -1,11 +1,11 @@
+import { AsyncPipe, JsonPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, combineLatest, filter, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, filter, of, switchMap } from 'rxjs';
 import { Todo } from '../../../gen/todo-api';
 import { PolicyService } from '../../policy/policy.service';
 import { TodoService } from '../todo.service';
-import { AsyncPipe, JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-todo-edit',
@@ -22,8 +22,11 @@ export class TodoEditComponent {
     id: [crypto.randomUUID()],
     title: [''],
     description: [''],
+    postMortemNotes: [''],
     state: [Todo.StateEnum.New]
   });
+
+  newTodo = false;
 
   livePolicy$ = new BehaviorSubject(false);
 
@@ -35,36 +38,36 @@ export class TodoEditComponent {
     combineLatest([this.form.valueChanges, this.livePolicy$])
       .pipe(
         filter(([, livePolicy]) => livePolicy),
-        switchMap(([todo]) => policyService.editableFields(TodoEditComponent.POLICY, of(todo)).pipe(map(editableFields => ({ todo, editableFields })))),
-        map(({ editableFields }) => (editableFields))
-      ).subscribe(editableFields => {
-        this.updateEditableFields(editableFields);
+        switchMap(([entity]) => this.policyService.evaluatePolicies(TodoEditComponent.POLICY, of(entity))),
+      ).subscribe(({ policyResults }) => {
+        this.applyPolicyToForm(policyResults);
       });
   }
 
-  updateEditableFields(editableFields: Record<string, boolean>) {
-    Object.entries(editableFields)
-      .forEach(([field, editable]) => editable ? this.form.get(field)?.enable({ emitEvent: false }) : this.form.get(field)?.disable({ emitEvent: false }));
+  applyPolicyToForm(policyResults: Record<string, Record<string, boolean>>) {
+    Object.entries(policyResults)
+      .forEach(([field, { EditableIf }]) => EditableIf ? this.form.get(field)?.enable({ emitEvent: false }) : this.form.get(field)?.disable({ emitEvent: false }));
   }
 
   submit() {
-    console.log('submit!!');
-    this.todoService.saveTodo(this.form.getRawValue() as Todo).subscribe(() => {
+    if (this.newTodo) {
+      this.todoService.saveTodo({...this.form.getRawValue() as Todo}).subscribe(() => {
+        this.load();
+      });
+    }
+    this.todoService.updateTodo(this.form.getRawValue() as Todo).subscribe(() => {
       this.load();
-      console.log('SUCCESS');
     });
   }
 
   load() {
+    this.newTodo = false;
     // When editing an existing entity, get it from the server and apply policies.
-    this.todoService.getTodo(this.activeRoute.snapshot.params['id'])
-      .pipe(
-        switchMap(todo => this.policyService.editableFields(TodoEditComponent.POLICY, of(todo)).pipe(map(editableFields => ({ todo, editableFields })))
-        ),
-      )
-      .subscribe(({ todo, editableFields }) => {
-        this.form.patchValue(todo);
-        this.updateEditableFields(editableFields);
-      });
+    this.todoService.getTodo(this.activeRoute.snapshot.params['id']).pipe(
+      switchMap(todo => this.policyService.evaluatePolicies(TodoEditComponent.POLICY, of(todo)))
+    ).subscribe(({ entity, policyResults }) => {
+      this.form.patchValue(entity);
+      this.applyPolicyToForm(policyResults);
+    });
   }
 }

@@ -15,6 +15,7 @@ export interface Todo {
     id?: string;
     title?: string;
     description?: string;
+    postMortemNotes?: string;
     state?: Todo.StateEnum;
 }
 export namespace Todo {

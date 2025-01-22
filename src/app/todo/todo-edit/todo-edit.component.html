@@ -1,18 +1,24 @@
 <label>
     Live policy checking:
-    <input type="checkbox" #livePolicyCheckbox (change)="livePolicy$.next(livePolicyCheckbox.checked)">    
+    <input type="checkbox" #livePolicyCheckbox (change)="livePolicy$.next(livePolicyCheckbox.checked)">
 </label>
 
-
 <form [formGroup]="form" (submit)="submit()">
-    <label>Title</label>
-    <input formControlName="title" />
 
-    <label>Description</label>
-    <textarea formControlName="description"></textarea>
+    @if (isVisible('title')) {
+        <label>Title</label>
+        <input formControlName="title" />
+    }
 
+    @if (isVisible('description')) {
+        <label>Description</label>
+        <textarea formControlName="description"></textarea>
+    }
+
+    @if (isVisible('postMortemNotes')) {
     <label>Post-Mortem Notes</label>
     <textarea formControlName="postMortemNotes"></textarea>
+    }
 
     <label>State</label>
     <select formControlName="state">
@@ -22,5 +28,6 @@
     </select>
     <button type="submit">Submit</button>
 </form>
-
+<pre>
 {{this.form.getRawValue() | json}}
+</pre>

@@ -1,7 +1,7 @@
 import { JsonPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, combineLatest, filter, of, switchMap } from 'rxjs';
 import { Todo } from '../../../gen/todo-api';
 import { PolicyService } from '../../policy/policy.service';
@@ -16,6 +16,7 @@ import { TodoService } from '../todo.service';
 })
 export class TodoEditComponent {
 
+
   static POLICY = "Todo";
 
   form = this.formBuilder.group({
@@ -26,11 +27,13 @@ export class TodoEditComponent {
     state: [Todo.StateEnum.New]
   });
 
-  newTodo = false;
+  newTodo = true;
 
   livePolicy$ = new BehaviorSubject(false);
 
-  constructor(private activeRoute: ActivatedRoute, private todoService: TodoService, private policyService: PolicyService, private formBuilder: FormBuilder) {
+  policyResults: Record<string, Record<string, boolean>> = {};
+
+  constructor(private router:Router, private activeRoute: ActivatedRoute, private todoService: TodoService, private policyService: PolicyService, private formBuilder: FormBuilder) {
     if (this.activeRoute.snapshot.params['id']) {
       this.load();
     }
@@ -45,19 +48,25 @@ export class TodoEditComponent {
   }
 
   applyPolicyToForm(policyResults: Record<string, Record<string, boolean>>) {
+    // EditableIf policy
     Object.entries(policyResults)
       .forEach(([field, { EditableIf }]) => EditableIf ? this.form.get(field)?.enable({ emitEvent: false }) : this.form.get(field)?.disable({ emitEvent: false }));
+    this.policyResults = policyResults;
   }
+
+
 
   submit() {
     if (this.newTodo) {
       this.todoService.saveTodo({...this.form.getRawValue() as Todo}).subscribe(() => {
+        this.router.navigate(['todo', 'edit', this.form.value.id]);
+      });
+    } else {
+      this.todoService.updateTodo(this.form.getRawValue() as Todo).subscribe(() => {
         this.load();
       });
     }
-    this.todoService.updateTodo(this.form.getRawValue() as Todo).subscribe(() => {
-      this.load();
-    });
+    
   }
 
   load() {
@@ -69,5 +78,15 @@ export class TodoEditComponent {
       this.form.patchValue(entity);
       this.applyPolicyToForm(policyResults);
     });
+  }
+
+  isVisible(fieldName: string) {
+    if (this.policyResults[fieldName] == undefined) {
+      return true;
+    }
+    if (!this.policyResults[fieldName].hasOwnProperty('VisibleIf')) {
+      return true;
+    }
+    return this.policyResults[fieldName]['VisibleIf'];
   }
 }

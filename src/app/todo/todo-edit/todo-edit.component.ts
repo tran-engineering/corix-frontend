@@ -1,4 +1,4 @@
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -10,7 +10,7 @@ import { TodoService } from '../todo.service';
 @Component({
   selector: 'app-todo-edit',
   standalone: true,
-  imports: [ReactiveFormsModule, JsonPipe, AsyncPipe],
+  imports: [ReactiveFormsModule, JsonPipe],
   templateUrl: './todo-edit.component.html',
   styleUrl: './todo-edit.component.scss'
 })

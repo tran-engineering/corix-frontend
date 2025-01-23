@@ -11,22 +11,20 @@ export class PolicyService {
   constructor(private policyControllerService: PolicyControllerService) {
   }
 
+  /**
+   * @returns an Observable of the policies
+   */
   private getPolicies(): Observable<Record<string, Record<string, Record<string, string>>>> {
     return this.policyControllerService.getPolicies().pipe(
-      shareReplay(1)
+      shareReplay(1) // cache, only need to fetch them once
     );
   }
 
-  public getPolicy(entityType: string, policyType: string): Observable<Record<string, string>> {
-    return this.getPolicies().pipe(
-      map(policies => {
-        console.log(policies);
-        return policies[entityType][policyType];
-      })
-    );
-  }
-
-  public getPoliciesForType(entityType: string): Observable<Record<string, Record<string, string>>> {
+  /**
+   * @param entityType
+   * @returns all polices for the entityType
+   */
+  private getPoliciesForType(entityType: string): Observable<Record<string, Record<string, string>>> {
     return this.getPolicies().pipe(
       map(policies => {
         return policies[entityType];
@@ -34,6 +32,23 @@ export class PolicyService {
     );
   }
 
+  /**
+   * 
+   * evaluatePolicies("Todo", {title: 'my title'}) returns
+   * {
+   *   entity: {title: 'my title'},
+   *   policyResults: {
+   *     title: {
+   *       EditableIf: false,
+   *       VisibleIf: true
+   *     }
+   *   }
+   * }
+   * 
+   * @param entityType 
+   * @param entity$ 
+   * @returns evaluated policies for the entity, and the entity itself
+   */
   public evaluatePolicies<T extends object>(entityType: string, entity$: Observable<T>): Observable<{ entity: T, policyResults: Record<string, Record<string, boolean>> }> {
     return combineLatest([
       this.getPoliciesForType(entityType),
